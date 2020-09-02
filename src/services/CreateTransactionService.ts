@@ -14,12 +14,23 @@ class CreateTransactionService {
     this.transactionsRepository = transactionsRepository;
   }
 
-  public execute({title, value, type}: Request): Transaction {
-    if(!['income', 'outcome'].includes(type)){
+  public execute({ title, value, type }: Request): Transaction {
+
+    if (!['income', 'outcome'].includes(type)) {
       throw new Error('Transaction type is invalid!');
     };
 
-    // If outcome > income. MSG ERRO
+    if (!Number.isFinite(value)) {
+      throw new Error('Transaction value is invalid!');
+    };
+
+    const { total } = this.transactionsRepository.getBalance();
+
+    if(type === 'outcome' && total < value){
+      throw new Error('Transaction value is bigger then your total!');
+    }
+
+    // If outcome > total. MSG ERRO
 
     const transaction = this.transactionsRepository.create({
       title,
@@ -28,6 +39,7 @@ class CreateTransactionService {
     });
 
     return transaction;
+
   }
 }
 
